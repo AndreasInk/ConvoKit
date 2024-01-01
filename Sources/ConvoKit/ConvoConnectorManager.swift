@@ -8,8 +8,6 @@
 import SwiftUI
 import llama
 
-
-@MainActor
 open class ConvoConnectorManager: ObservableObject {
     
     public init(messageLog: String = "", cacheCleared: Bool = false, llamaContext: LlamaContext? = nil) {
@@ -46,6 +44,7 @@ open class ConvoConnectorManager: ObservableObject {
         }
     }
 
+    @MainActor
     public func complete(text: String, options: String) async -> String {
         guard let llamaContext else {
             return ""
@@ -53,7 +52,7 @@ open class ConvoConnectorManager: ObservableObject {
 
         let prompt =
 """
-Return the option related to the request and given options\n Request: \(text)\nOptions: \(options)\nReturned Option:
+Return the option related to the request and given options\nRequest: \(text)\nOptions: \(options)\nReturned Option:
 
 """
         let t_start = DispatchTime.now().uptimeNanoseconds
@@ -67,7 +66,7 @@ Return the option related to the request and given options\n Request: \(text)\nO
             results += "\(result)"
   
         }
-        lastFunction = results
+
         let t_end = DispatchTime.now().uptimeNanoseconds
         let t_generation = Double(t_end - t_heat_end) / NS_PER_S
         let tokens_per_second = Double(await llamaContext.n_len) / t_generation

@@ -4,44 +4,6 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-
-///
-public struct ConvoAccessibleOld: MemberMacro {
-    public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
-        var generatedNotificationCenter = ""
-        
-        guard var classDecl = declaration.as(ClassDeclSyntax.self) else {
-            throw SkillIssueError()
-        }
-        
-        let funcDecls = classDecl.memberBlock.members.map(\.decl)
-        for decl in funcDecls {
-            if var funcDecl = decl.as(FunctionDeclSyntax.self) {
-                let nameOfFunction = funcDecl.name
-                
-                let listener = """
-                NotificationCenter.default.addObserver(forName:  Notification.Name(rawValue: \"\(classDecl.name.trimmed)-\(nameOfFunction)\"), object: nil, queue: .main) { [weak self] _ in
-                        self?.\(nameOfFunction)()
-                }
-                
-                """
-                generatedNotificationCenter.append(listener)
-            }
-        }
-        return [DeclSyntax("""
-        
-        init() {
-            self.initializeConvo()
-        }
-        
-        public func initializeConvo() {
-            \(raw: generatedNotificationCenter)
-        }
-        
-        """)]
-    }
-}
-
 public struct ConvoAccessible: MemberMacro {
     public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
         
