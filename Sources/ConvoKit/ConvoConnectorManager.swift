@@ -8,7 +8,9 @@
 import SwiftUI
 import llama
 
-open class ConvoConnector: ObservableObject {
+
+@MainActor
+open class ConvoConnectorManager: ObservableObject {
     
     public init(messageLog: String = "", cacheCleared: Bool = false, llamaContext: LlamaContext? = nil) {
         self.messageLog = messageLog
@@ -16,7 +18,8 @@ open class ConvoConnector: ObservableObject {
         self.llamaContext = llamaContext
     }
    
-    @Published var messageLog = ""
+    @Published public var messageLog = ""
+    @Published public var lastFunction = ""
     @Published var cacheCleared = false
     let NS_PER_S = 1_000_000_000.0
 
@@ -43,30 +46,36 @@ open class ConvoConnector: ObservableObject {
         }
     }
 
-    func complete(text: String) async -> String {
+    public func complete(text: String, options: String) async -> String {
         guard let llamaContext else {
             return ""
         }
 
+        let prompt =
+"""
+Return the option related to the request and given options\n Request: \(text)\nOptions: \(options)\nReturned Option:
+
+"""
         let t_start = DispatchTime.now().uptimeNanoseconds
-        await llamaContext.completion_init(text: text)
+        await llamaContext.completion_init(text: prompt)
         let t_heat_end = DispatchTime.now().uptimeNanoseconds
         let t_heat = Double(t_heat_end - t_start) / NS_PER_S
 
-        messageLog += "\(text)"
-
+        var results = ""
         while await llamaContext.n_cur < llamaContext.n_len {
             let result = await llamaContext.completion_loop()
-            messageLog += "\(result)"
+            results += "\(result)"
+  
         }
-
+        lastFunction = results
         let t_end = DispatchTime.now().uptimeNanoseconds
         let t_generation = Double(t_end - t_heat_end) / NS_PER_S
         let tokens_per_second = Double(await llamaContext.n_len) / t_generation
 
         await llamaContext.clear()
-        
-        return "\(messageLog)"
+        print(results)
+        await clear()
+        return results.replacingOccurrences(of: "\n", with: "")
         
     }
 

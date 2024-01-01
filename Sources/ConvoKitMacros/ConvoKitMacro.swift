@@ -4,10 +4,10 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
+
 ///
 public struct ConvoAccessibleOld: MemberMacro {
     public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
-        UserDefaults.standard.set("abc", forKey: "abc")
         var generatedNotificationCenter = ""
         
         guard var classDecl = declaration.as(ClassDeclSyntax.self) else {
@@ -45,7 +45,6 @@ public struct ConvoAccessibleOld: MemberMacro {
 public struct ConvoAccessible: MemberMacro {
     public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
         
-        var generatedFunctionsToCall = UserDefaults.standard.string(forKey: "generatedFunctionsToCall") ?? ""
         
         guard var classDecl = declaration.as(ClassDeclSyntax.self) else {
             throw SkillIssueError()
@@ -56,35 +55,38 @@ public struct ConvoAccessible: MemberMacro {
             if var funcDecl = decl.as(FunctionDeclSyntax.self) {
                 let nameOfFunction = funcDecl.name.text
                 
-                generatedFunctionsToCall.append(classDecl.name.text + ".shared." + nameOfFunction + "()\n")
+                ConvoState.shared.generatedFunctionsToCall.append(classDecl.name.text + ".shared." + nameOfFunction + "()\n")
             }
         }
-        UserDefaults.standard.set(generatedFunctionsToCall, forKey: "generatedFunctionsToCall")
 
-        return []
+        return [DeclSyntax(stringLiteral: "func test() {}")]
     }
 }
 
-public struct ConvoConnector: MemberMacro {
-    public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
-        let generatedFunctionsToCall = UserDefaults.standard.string(forKey: "generatedFunctionsToCall") ?? ""
-        let functionsSplit = generatedFunctionsToCall.split(separator: "\n")
-        var codeToReturn = "func callFunctionIfNeeded() {"
-        for function in functionsSplit {
+public struct ConvoConnector: DeclarationMacro {
+    public static func expansion(of node: some SwiftSyntax.FreestandingMacroExpansionSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
+        var codeToReturn = ""
+        for function in ConvoState.shared.generatedFunctionsToCall.split(separator: "\n") {
             if let functionName = function.split(separator: ".").last {
                 codeToReturn.append("""
         
-            if messageLog == \"\(functionName)\" {
+            if functionName.contains(\"\(functionName)\") {
                 \(function)
             }
         """
                 )
             }
         }
-        return [DeclSyntax(stringLiteral: codeToReturn + "\n}")]
+        return [DeclSyntax(stringLiteral: codeToReturn)]
     }
 }
 
+struct GetConvoState: ExpressionMacro {
+    static func expansion(of node: some SwiftSyntax.FreestandingMacroExpansionSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> SwiftSyntax.ExprSyntax {
+        let returns = ConvoState.shared.generatedFunctionsToCall.replacingOccurrences(of: "\n", with: " ")
+        return ExprSyntax(stringLiteral: "\"\(returns)\"")
+    }
+}
 struct SkillIssueError: Error {
     
 }
@@ -92,6 +94,22 @@ struct SkillIssueError: Error {
 struct ConvoKitPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         ConvoAccessible.self,
-        ConvoConnector.self
+        ConvoConnector.self,
+        GetConvoState.self
     ]
+}
+
+public struct ConvoState {
+    public init(generatedFunctionsToCall: String = "") {
+        self.generatedFunctionsToCall = generatedFunctionsToCall
+    }
+    public static var shared = ConvoState()
+    var generatedFunctionsToCall = "" {
+        willSet(newFunctions) {
+            Array(Set(newFunctions.split(separator: "\n"))).joined(separator: "\n").replacingOccurrences(of: "\n", with: "")
+        }
+        didSet {
+            
+        }
+    }
 }

@@ -16,6 +16,9 @@ import Observation
 @attached(member, names: arbitrary)
 public macro ConvoAccessible() = #externalMacro(module: "ConvoKitMacros", type: "ConvoAccessible")
 
-@attached(member, names: arbitrary)
+@freestanding(declaration)
 public macro ConvoConnector() = #externalMacro(module: "ConvoKitMacros", type: "ConvoConnector")
 
+
+@freestanding(expression)
+public macro GetConvoState() -> String = #externalMacro(module: "ConvoKitMacros", type: "GetConvoState")
