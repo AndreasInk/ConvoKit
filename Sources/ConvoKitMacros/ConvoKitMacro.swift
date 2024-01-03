@@ -21,20 +21,22 @@ public struct ConvoAccessible: MemberMacro {
             }
         }
 
-        return [DeclSyntax(stringLiteral: "func test() {}")]
+        return [DeclSyntax(stringLiteral: "static let shared = " + classDecl.name.text + "()")]
     }
 }
 
 public struct ConvoConnector: DeclarationMacro {
     public static func expansion(of node: some SwiftSyntax.FreestandingMacroExpansionSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
         var codeToReturn = ""
-        for function in ConvoState.shared.generatedFunctionsToCall.split(separator: "\n") {
+        let convoState = ConvoState.shared.generatedFunctionsToCall
+        let cleanConvoState = Array(Set(convoState.split(separator: "\n"))).joined(separator: "\n")
+        for function in cleanConvoState.split(separator: "\n") {
             if let functionName = function.split(separator: ".").last {
                 codeToReturn.append("""
-        
-            if functionName.contains(\"\(functionName)\") {
-                \(function)
-            }
+
+        if functionName.contains(\"\(functionName)\") {
+            \(function)
+        }
         """
                 )
             }
@@ -45,8 +47,10 @@ public struct ConvoConnector: DeclarationMacro {
 
 struct GetConvoState: ExpressionMacro {
     static func expansion(of node: some SwiftSyntax.FreestandingMacroExpansionSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> SwiftSyntax.ExprSyntax {
-        let returns = ConvoState.shared.generatedFunctionsToCall.replacingOccurrences(of: "\n", with: " ")
-        return ExprSyntax(stringLiteral: "\"\(returns)\"")
+        let convoState = ConvoState.shared.generatedFunctionsToCall
+        let cleanConvoState = Array(Set(convoState.split(separator: "\n"))).joined(separator: "\n").replacingOccurrences(of: "\n", with: "")
+        let returnState = cleanConvoState.replacingOccurrences(of: "\n", with: " ")
+        return ExprSyntax(stringLiteral: "\"\(returnState)\"")
     }
 }
 struct SkillIssueError: Error {
@@ -66,12 +70,5 @@ public struct ConvoState {
         self.generatedFunctionsToCall = generatedFunctionsToCall
     }
     public static var shared = ConvoState()
-    var generatedFunctionsToCall = "" {
-        willSet(newFunctions) {
-            Array(Set(newFunctions.split(separator: "\n"))).joined(separator: "\n").replacingOccurrences(of: "\n", with: "")
-        }
-        didSet {
-            
-        }
-    }
+    var generatedFunctionsToCall = ""
 }

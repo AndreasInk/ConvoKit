@@ -9,7 +9,7 @@ import SwiftUI
 
 public struct DownloadButton: View {
     
-    @ObservedObject private var llamaState: ConvoConnectorManager
+    var llamaState: ConvoLLMManager
     private var modelName: String
     private var modelUrl: String
     private var filename: String
@@ -27,7 +27,7 @@ public struct DownloadButton: View {
     private func checkFileExistenceAndUpdateStatus() {
     }
 
-    public init(llamaState: ConvoConnectorManager, modelName: String, modelUrl: String, filename: String) {
+    public init(llamaState: ConvoLLMManager, modelName: String, modelUrl: String, filename: String) {
         self.llamaState = llamaState
         self.modelName = modelName
         self.modelUrl = modelUrl

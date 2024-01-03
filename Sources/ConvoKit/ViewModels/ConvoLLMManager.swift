@@ -1,5 +1,5 @@
 //
-//  ConvoConnector.swift
+//  ConvoLLMManager.swift
 //
 //
 //  Created by Andreas Ink on 1/1/24.
@@ -8,7 +8,8 @@
 import SwiftUI
 import llama
 
-open class ConvoConnectorManager: ObservableObject {
+
+open class ConvoLLMManager {
     
     public init(messageLog: String = "", cacheCleared: Bool = false, llamaContext: LlamaContext? = nil) {
         self.messageLog = messageLog
@@ -16,17 +17,19 @@ open class ConvoConnectorManager: ObservableObject {
         self.llamaContext = llamaContext
     }
    
+    let baseThinkURL = BaseURLs.think
     @Published public var messageLog = ""
     @Published public var lastFunction = ""
     @Published var cacheCleared = false
     let NS_PER_S = 1_000_000_000.0
-
+    
     private var llamaContext: LlamaContext?
     private var defaultModelUrl: URL? {
         Bundle.main.url(forResource: "ggml-model", withExtension: "gguf", subdirectory: "models")
     }
     
     func setup() {
+        
         do {
             try loadModel(modelUrl: defaultModelUrl)
         } catch {
@@ -78,35 +81,29 @@ Return the option related to the request and given options\nRequest: \(text)\nOp
         
     }
 
-    func bench() async {
-        guard let llamaContext else {
-            return
-        }
-
-        messageLog += "\n"
-        messageLog += "Running benchmark...\n"
-        messageLog += "Model info: "
-        messageLog += await llamaContext.model_info() + "\n"
-
-        let t_start = DispatchTime.now().uptimeNanoseconds
-        let _ = await llamaContext.bench(pp: 8, tg: 4, pl: 1) // heat up
-        let t_end = DispatchTime.now().uptimeNanoseconds
-
-        let t_heat = Double(t_end - t_start) / NS_PER_S
-        messageLog += "Heat up time: \(t_heat) seconds, please wait...\n"
-
-        // if more than 5 seconds, then we're probably running on a slow device
-        if t_heat > 5.0 {
-            messageLog += "Heat up time is too long, aborting benchmark\n"
-            return
-        }
-
-        let result = await llamaContext.bench(pp: 512, tg: 128, pl: 1, nr: 3)
-
-        messageLog += "\(result)"
-        messageLog += "\n"
+    func submitNewChat(_ text: String, chatInput: ChatInput = .emptyChat) async throws -> [ChatMessage] {
+        
+        var chatInput = chatInput
+        chatInput.messages.append(ChatMessage(role: .user, content: text))
+        
+        var urlRequest = URLRequest(url: URL(string: baseThinkURL + "/generateChat")!)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        
+        let response = try await URLSession.shared.upload(for: urlRequest, from: try encoder.encode(chatInput))
+        
+        let data = response.0
+        if let message = String(data: data, encoding: .utf8) {
+            print(message)
+            chatInput.messages.append(ChatMessage(role: .assistant, content: message))
     }
-
+        return chatInput.messages
+        
+    }
+    
     func clear() async {
         guard let llamaContext else {
             return
