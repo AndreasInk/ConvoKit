@@ -32,11 +32,17 @@ extension ConvoStreamer: SNResultsObserving {
                 Task {
                     let _ = try await toggleRecord(isAsking: true,
                                            chatInput: .emptyChat)
-                    self.state.wasListening = true
+                    Task { @MainActor in
+                        self.state.wasListening = true
+                    }
                 }
-                self.state.nonSpeechCount = 0
+                Task { @MainActor in
+                    self.state.nonSpeechCount = 0
+                }
             }
-            self.state.nonSpeechCount += 1
+            Task { @MainActor in
+                self.state.nonSpeechCount += 1
+            }
         }
 
         // Print the classification's name (label) and confidence.

@@ -11,13 +11,14 @@ import llama
 
 open class ConvoLLMManager {
     
-    public init(messageLog: String = "", cacheCleared: Bool = false, llamaContext: LlamaContext? = nil) {
+    public init(messageLog: String = "", cacheCleared: Bool = false, llamaContext: LlamaContext? = nil, baseThinkURL: String) {
         self.messageLog = messageLog
         self.cacheCleared = cacheCleared
         self.llamaContext = llamaContext
+        self.baseThinkURL = baseThinkURL
     }
    
-    let baseThinkURL = BaseURLs.think
+    let baseThinkURL: String
     @Published public var messageLog = ""
     @Published public var lastFunction = ""
     @Published var cacheCleared = false

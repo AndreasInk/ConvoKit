@@ -20,9 +20,10 @@ let package = Package(
         // Depend on the Swift 5.9 release of SwiftSyntax
         .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
         .package(url: "https://github.com/ggerganov/llama.cpp.git", branch: "master"),
-        .package(url: "https://github.com/ericlewis/SwiftWhisper.git", branch: "master"),
+        .package(url: "https://github.com/ggerganov/whisper.cpp.git", branch: "master"),
         .package(url: "https://github.com/splinetool/spline-ios.git", branch: "main"),
         .package(url: "https://github.com/AndreasInk/AudioStreaming.git", branch: "main"),
+        .package(url: "https://github.com/AudioKit/AudioKit.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -40,9 +41,10 @@ let package = Package(
         .target(name: "ConvoKit", dependencies: [
             .byName(name: "ConvoKitMacros"),
             .product(name: "llama", package: "llama.cpp"),
-            .byName(name: "SwiftWhisper"),
+            .product(name: "whisper", package: "whisper.cpp"),
             .product(name: "SplineRuntime", package: "spline-ios"),
             .byName(name: "AudioStreaming"),
+            .byName(name: "AudioKit"),
         ]),
      
         // A test target used to develop the macro implementation.

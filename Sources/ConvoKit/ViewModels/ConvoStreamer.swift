@@ -8,7 +8,7 @@
 import Foundation
 import AVFoundation
 import AudioStreaming
-import SwiftWhisper
+import whisper
 
 public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, AVAudioPlayerDelegate, AVAudioRecorderDelegate {
     
@@ -24,19 +24,22 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
     
     @Published var state = State()
     
-    public var llmManager = ConvoLLMManager()
-    private var whisper: Whisper
+    public var llmManager: ConvoLLMManager
     private let recorder = Recorder()
     private var player = AudioPlayer()
     private var timer: Timer?
     private var soundAnalyzer: SoundAnalyzer = .init()
+    private var whisperContext: WhisperContext?
     
-    public override init() {
-        let whisper = Whisper(fromFileURL: Bundle.main.url(forResource: "ggml-tiny.en", withExtension: "bin")!)
-        whisper.params.language = .english
-        whisper.params.suppress_non_speech_tokens = true
-        whisper.params.suppress_blank = false
-        self.whisper = whisper
+    let baseSpeakURL: String
+    let baseThinkURL: String
+    let localWhisperURL: URL
+    public init(baseThinkURL: String, baseSpeakURL: String, localWhisperURL: URL ) {
+
+        self.baseThinkURL = baseThinkURL
+        self.baseSpeakURL = baseSpeakURL
+        self.localWhisperURL = localWhisperURL
+        self.llmManager = ConvoLLMManager(baseThinkURL: baseThinkURL)
     }
     deinit {
        
@@ -45,6 +48,16 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
     
     let tmpURL = URL.documentsDirectory.appendingPathComponent("tmp", conformingTo: .audio)
     
+    public func initWhisper() {
+        DispatchQueue.global().async {
+            do {
+                self.whisperContext = try WhisperContext.createContext(path: self.localWhisperURL.path())
+            } catch {
+                print(error)
+            }
+        }
+    }
+    
     func toggleRecord(isAsking: Bool = false, chatInput: ChatInput) async throws -> ConvoResult? {
         
         self.player.delegate = self
@@ -52,20 +65,18 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
         
         if await self.recorder.isRecording() {
             await self.recorder.stopRecording()
-            self.state.isRecording = false
-            let data = try Data(contentsOf: tmpURL)
-            let floats = stride(from: 44, to: data.count, by: 2).map {
-                return data[$0..<$0 + 2].withUnsafeBytes {
-                    let short = Int16(littleEndian: $0.load(as: Int16.self))
-                    return max(-1.0, min(Float(short) / 32767.0, 1.0))
-                }
+            Task { @MainActor in
+                self.state.isRecording = false
             }
-            let transcription = try await whisper.transcribe(audioFrames: floats).map({AudioTranscription(text: $0.text, timestamp: Double($0.startTime), audioData: try Data(contentsOf: tmpURL))})
-            print(transcription)
+            let floats = try AudioUtils.convertAudioFileToPCMArray(fileURL: tmpURL)
+            
+            await whisperContext?.fullTranscribe(samples: floats)
+            let text = await whisperContext?.getTranscription() ?? ""
+
+            print(text)
             try? FileManager.default.removeItem(at: tmpURL)
             
             if isAsking {
-                let text = transcription.map(\.text).joined()
                 if text.count > 10 {
                     do {
                         let chatResponse = try await llmManager.submitNewChat(text, chatInput: chatInput)
@@ -83,12 +94,14 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
                     return try await toggleRecord(isAsking: isAsking, chatInput: chatInput)
                 }
             }
-            result.transcription = transcription
+            result.transcription = [AudioTranscription(text: text, timestamp: 0, audioData: Data())]
             self.state.result = result
             return result
             
         } else {
-            state.nonSpeechCount = 0
+            Task { @MainActor in
+                state.nonSpeechCount = 0
+            }
             return await startRecording(audioEngine: await recorder.audioEngine)
         }
     }
@@ -99,7 +112,9 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
                 return nil
             }
             try await self.recorder.startRecording(toOutputFile: tmpURL, delegate: self)
-            self.state.isRecording = true
+            Task { @MainActor in
+                self.state.isRecording = true
+            }
             Task {
                 await self.getInputLoudness()
             }
@@ -167,9 +182,6 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
         
     }
     
-   
-    let baseSpeakURL = BaseURLs.speak
-    
     func requestStream(_ text: String) async throws -> String {
         let request = URL(string: "\(baseSpeakURL)/chat?chat=\("")&descriptionOfScene=\("")&textInImage=\("")&directResponse=\(text)")!
         
@@ -202,3 +214,4 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
 struct AudioResponse: Codable {
     var fileID: String
 }
+
