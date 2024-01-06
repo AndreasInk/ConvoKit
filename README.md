@@ -2,7 +2,7 @@
 
 ### Goal:
 
-Make SwiftUI apps more accessible with natural language + voice control
+Make SwiftUI apps more accessible + powerful with conversations
 
 ### Why:
 
@@ -59,7 +59,7 @@ func callFunctionIfNeeded(functionName: String, args: [String]) {
 
 ![ConvoKit Example.png](https://res.craft.do/user/full/23a03a79-af5e-1af9-b4ff-27170389b6b1/doc/E4042505-40C7-4BEF-BDD8-996CDFCB3A26/1C393D7F-396D-4065-9DF8-7CA5097F6EB9_2/iDQEW82ZAxggbGq0xLhyZwddoF4kreTMY77oLyRqAt8z/ConvoKit%20Example.png)
 
-### Potential Use Cases:
+### Future Use Cases (ConvoKit isn't at this complexity yet, but this is the vision for it):
 
 YouTube
 
