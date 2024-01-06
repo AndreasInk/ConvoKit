@@ -41,12 +41,26 @@ public struct ConvoConnector: DeclarationMacro {
             var argsString = ""
             var argIndex = 0
             for arg in function.args {
-                argsString.append("""
+                if arg.type == "String" {
+                    
+                    argsString.append("""
+                guard args.indices.contains(\(argIndex)) else {
+                    return
+                }
+                let \(arg.name) = args[\(argIndex)]
+                """)
+                    
+                } else {
+                    
+                    argsString.append("""
                 guard args.indices.contains(\(argIndex)), let \(arg.name) = \(arg.type)(args[\(argIndex)]) else {
                     return
                 }
                 """)
+                    
+                }
                 argIndex += 1
+                    
             }
             var functionString = function.functionName + "("
             for arg in function.args {

@@ -54,35 +54,32 @@ open class ConvoLLMManager {
     }
 
     @MainActor
-    public func complete(prompt: String, text: String, options: String) async -> String? {
+    public func complete(prompt: String, text: String, options: String, isCompletingFunction: Bool) async -> String? {
         guard let llamaContext else {
             return ""
         }
-        
-        
+        let length: Int = (prompt.count + text.count + options.count) / 5
+        print("length: \(length)")
         let t_start = DispatchTime.now().uptimeNanoseconds
         await llamaContext.completion_init(text: prompt)
         let t_heat_end = DispatchTime.now().uptimeNanoseconds
         let t_heat = Double(t_heat_end - t_start) / NS_PER_S
         var correctOptionAppearCount = 0
         var results = ""
-        while await llamaContext.n_cur < llamaContext.n_len {
+        while await llamaContext.n_cur < length {
             let result = await llamaContext.completion_loop()
-            results += "\(result)"
-            let root = String(results.split(separator: "(").first ?? "")
-            print("root: \(root)")
+            print(result)
+            let newResult = results + result
+            var delimiterString = isCompletingFunction ? "Correct Option" : "Correct Argument Values"
             
-            if correctOptionAppearCount == 1 {
+            if newResult.contains(delimiterString), isCompletingFunction {
                 //if options.split(separator: ", ").map({String($0)}).contains(root) {
                 print("results: \(results)")
                 await llamaContext.clear()
-                return String(results.split(separator: "Correct Option:").first ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-
+                return String(results.split(separator: delimiterString).first ?? "").replacingOccurrences(of: ":", with: "").replacingOccurrences(of: delimiterString, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
             }
+            results = newResult
             
-            if results.contains("Correct Option:") {
-                correctOptionAppearCount += 1
-            }
         }
         
         let t_end = DispatchTime.now().uptimeNanoseconds
@@ -115,7 +112,9 @@ open class ConvoLLMManager {
         """
 
         // Attempt to identify the function name
-        guard let functionName = await complete(prompt: choosePrompt, text: cleanText, options: options) else {
+        guard let functionName = await complete(prompt: choosePrompt, 
+                                                text: cleanText, options: options, 
+                                                isCompletingFunction: true) else {
             return nil // Handle cases where the function name couldn't be determined
         }
 
@@ -123,8 +122,8 @@ open class ConvoLLMManager {
         var args: [String] = []
         if !functionName.contains("()") {
             let argumentsPrompt = """
-                    Identify and return the argument values for the given function based on the provided context:
-                    Function Name: \(functionName)
+                    Identify and return only the argument values for the given function signature based on the provided context description, each argument is separated by \",\":
+                    Function Signature: \(functionName)
                     Context Description: \(cleanText)
 
                     Correct Argument Values:
@@ -133,7 +132,10 @@ open class ConvoLLMManager {
 
 
             // Attempt to parse the arguments
-            if let argumentsString = await complete(prompt: argumentsPrompt, text: cleanText, options: options) {
+            if let argumentsString = await complete(prompt: argumentsPrompt,
+                                                    text: cleanText,
+                                                    options: options,
+                                                    isCompletingFunction: false) {
                 for arg in argumentsString.split(separator: ",").map({String($0)}) {
                     if let lastElement = arg.split(separator: ": ").last, let arg = lastElement.split(separator: "Correct Argument").first {
                         args.append(String(arg))

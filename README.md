@@ -2,13 +2,15 @@
 
 ### Goal:
 
-Make SwiftUI apps more accessible + powerful with conversations
+Make SwiftUI apps more accessible + powerful with conversation
 
 ### Why:
 
 My Dad has Parkinson's which can make it difficult to use touch screens, especially when his tremors are worse.
 
 I've attempted to develop computer vision based control apps with eye tracking but we find these somewhat inaccurate, this is where ConvoKit can hopefully help.
+
+Further, ConvoKit makes apps easier to use for everyone, but especially for people with intellectual conditions.
 
 ### Idea:
 
@@ -50,7 +52,7 @@ func request(text: String) async {
 }
     
 func callFunctionIfNeeded(functionName: String, args: [String]) {
-   // A macro that injects a bunch of if statements to handle the called function
+    // A macro that injects a bunch of if statements to handle the called function
     #ConvoConnector
 }
 ```
@@ -75,4 +77,3 @@ Apple Health
 ### Live Simple Example:
 
 https://github.com/AndreasInk/ConvoKit/assets/67549402/3f5dc956-8a2c-449f-b11b-5dabdf7508a4
-

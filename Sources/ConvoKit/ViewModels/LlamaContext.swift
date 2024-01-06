@@ -41,7 +41,7 @@ public actor LlamaContext {
     /// This variable is used to store temporarily invalid cchars
     private var temporary_invalid_cchars: [CChar]
 
-    var n_len: Int32 = 128
+    var n_len: Int32 = 512
     var n_cur: Int32 = 0
 
     var n_decode: Int32 = 0
