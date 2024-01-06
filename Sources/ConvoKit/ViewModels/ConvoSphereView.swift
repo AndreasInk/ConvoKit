@@ -57,16 +57,19 @@ public struct ConvoSphereView: View {
         .onTapGesture {
             Task {
                 let result = try await audioStreamer.toggleRecord(isAsking: true, chatInput: .emptyChat)
-                if let transcriptionText = result?.transcription {
-                    transcription(transcriptionText.map(\.text).joined())
+                if let transcription = result?.transcription {
+                    cleanTranscription(transcription)
                 }
             }
         }
         .onChange(of: audioStreamer.state.result?.id) { newValue in
             if let result = audioStreamer.state.result {
-                transcription(result.transcription.map(\.text).joined())
+                cleanTranscription(result.transcription)
             }
         }
+    }
+    func cleanTranscription(_ transcriptions: [AudioTranscription]) {
+        transcription(transcriptions.map(\.text).joined().trimmingCharacters(in: .whitespacesAndNewlines))
     }
 }
 

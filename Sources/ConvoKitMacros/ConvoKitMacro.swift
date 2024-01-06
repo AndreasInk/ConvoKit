@@ -14,10 +14,17 @@ public struct ConvoAccessible: MemberMacro {
         
         let funcDecls = classDecl.memberBlock.members.map(\.decl)
         for decl in funcDecls {
-            if var funcDecl = decl.as(FunctionDeclSyntax.self) {
-                let nameOfFunction = funcDecl.name.text
+            if var funcDecl = decl.as(FunctionDeclSyntax.self), "\(funcDecl)".contains("public") {
                 
-                ConvoState.shared.generatedFunctionsToCall.append(classDecl.name.text + ".shared." + nameOfFunction + "()\n")
+                var args = [ConvoArgs]()
+                let nameOfFunction = funcDecl.name.text
+                for params in funcDecl.signature.parameterClause.parameters {
+                    let returnType = params.type.description
+                    let paramName = params.firstName.text
+                    args.append(ConvoArgs(name: paramName, value: "", type: returnType))
+                }
+                let convoFunction = ConvoFunction(functionName: classDecl.name.text + ".shared." + nameOfFunction, args: args)
+                ConvoState.shared.generatedFunctionsToCall.insert(convoFunction)
             }
         }
 
@@ -27,30 +34,56 @@ public struct ConvoAccessible: MemberMacro {
 
 public struct ConvoConnector: DeclarationMacro {
     public static func expansion(of node: some SwiftSyntax.FreestandingMacroExpansionSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
-        var codeToReturn = ""
         let convoState = ConvoState.shared.generatedFunctionsToCall
-        let cleanConvoState = Array(Set(convoState.split(separator: "\n"))).joined(separator: "\n")
-        for function in cleanConvoState.split(separator: "\n") {
-            if let functionName = function.split(separator: ".").last {
-                codeToReturn.append("""
-
-        if functionName.contains(\"\(functionName)\") {
-            \(function)
-        }
-        """
-                )
+        var stringToReturn = ""
+        
+        for function in convoState {
+            var argsString = ""
+            var argIndex = 0
+            for arg in function.args {
+                argsString.append("""
+                guard args.indices.contains(\(argIndex)), let \(arg.name) = \(arg.type)(args[\(argIndex)]) else {
+                    return
+                }
+                """)
+                argIndex += 1
             }
+            var functionString = function.functionName + "("
+            for arg in function.args {
+                functionString += arg.name + ": " + arg.name
+            }
+            functionString += ")"
+            let a = String(function.functionName.split(separator: "(").first ?? "")
+            stringToReturn.append("""
+
+            if functionName.contains(\"\(a)\") {
+                \(argsString)
+                \(functionString)
+            }
+
+        
+        """)
+            
         }
-        return [DeclSyntax(stringLiteral: codeToReturn)]
+        return [DeclSyntax(stringLiteral: stringToReturn)]
     }
 }
 
 struct GetConvoState: ExpressionMacro {
     static func expansion(of node: some SwiftSyntax.FreestandingMacroExpansionSyntax, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> SwiftSyntax.ExprSyntax {
         let convoState = ConvoState.shared.generatedFunctionsToCall
-        let cleanConvoState = Array(Set(convoState.split(separator: "\n"))).joined(separator: "\n").replacingOccurrences(of: "\n", with: "")
-        let returnState = cleanConvoState.replacingOccurrences(of: "\n", with: " ")
-        return ExprSyntax(stringLiteral: "\"\(returnState)\"")
+        var stringToReturn = ""
+        for function in convoState {
+            var functionString = function.functionName + "("
+            for arg in function.args {
+                functionString += arg.name + ": " + arg.name
+            }
+            functionString += "), "
+            
+            stringToReturn.append(functionString)
+            
+        }
+        return ExprSyntax(stringLiteral: "\"\(stringToReturn)\"")
     }
 }
 struct SkillIssueError: Error {
@@ -66,9 +99,23 @@ struct ConvoKitPlugin: CompilerPlugin {
 }
 
 public struct ConvoState {
-    public init(generatedFunctionsToCall: String = "") {
+    public init(generatedFunctionsToCall: Set<ConvoFunction> = []) {
         self.generatedFunctionsToCall = generatedFunctionsToCall
     }
     public static var shared = ConvoState()
-    var generatedFunctionsToCall = ""
+    var generatedFunctionsToCall: Set<ConvoFunction> = []
+}
+
+public struct ConvoFunction: Hashable {
+    public static func == (lhs: ConvoFunction, rhs: ConvoFunction) -> Bool {
+        return lhs.functionName == rhs.functionName
+    }
+    
+    var functionName: String
+    var args: [ConvoArgs]
+}
+public struct ConvoArgs: Hashable {
+    var name: String
+    var value: String
+    var type: String
 }

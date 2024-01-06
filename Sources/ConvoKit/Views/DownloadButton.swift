@@ -110,6 +110,14 @@ public struct DownloadButton: View {
         .onDisappear() {
             downloadTask?.cancel()
         }
+        .onAppear {
+            do {
+                let fileURL = DownloadButton.getFileURL(filename: filename)
+                try llamaState.loadModel(modelUrl: fileURL)
+            } catch let err {
+                print("Error: \(err.localizedDescription)")
+            }
+        }
         .onChange(of: llamaState.cacheCleared) { newValue in
             if newValue {
                 downloadTask?.cancel()

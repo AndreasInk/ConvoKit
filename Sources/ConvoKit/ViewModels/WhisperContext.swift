@@ -33,7 +33,8 @@ actor WhisperContext {
             // Adapted from whisper.objc
             params.print_realtime   = true
             params.print_progress   = false
-            params.print_timestamps = true
+            params.print_timestamps = false
+            params.suppress_blank   = true
             params.print_special    = false
             params.translate        = false
             params.language         = en
