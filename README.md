@@ -74,7 +74,5 @@ Apple Health
 
 ### Live Simple Example:
 
-[RPReplay_Final1704503781.mov](https://res.craft.do/user/full/23a03a79-af5e-1af9-b4ff-27170389b6b1/doc/E4042505-40C7-4BEF-BDD8-996CDFCB3A26/8071838E-817B-45E3-AF17-3D894E36B5C9_2/C270v4sI1kJpAYCrQvlXk64okBsyVzdhgL076MyX1CUz/RPReplay_Final1704503781.mov)
-
-
+https://github.com/AndreasInk/ConvoKit/assets/67549402/3f5dc956-8a2c-449f-b11b-5dabdf7508a4
 
