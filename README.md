@@ -1,22 +1,24 @@
 # ConvoKit
 
+![ConvoKit Header.png](https://res.craft.do/user/full/23a03a79-af5e-1af9-b4ff-27170389b6b1/doc/E4042505-40C7-4BEF-BDD8-996CDFCB3A26/8A8EDFDA-6C3A-4D98-8712-BEFA90ADB6B8_2/NL7UXpDw9nQIS5P2gMqmxN7GbKMZid3xbIdpmwVbxKEz/ConvoKit%20Header.png)
+
 ### Goal:
 
 Make SwiftUI apps more accessible + powerful with conversation
 
 ### Why:
 
-My Dad has Parkinson's which can make it difficult to use touch screens, especially when his tremors are worse.
+My Dad has Parkinson's disease which can make it difficult to use touch screens at times, especially when his tremors are worse.
 
 I've attempted to develop computer vision based control apps with eye tracking but we find these somewhat inaccurate, this is where ConvoKit can hopefully help.
 
-Further, ConvoKit makes apps easier to use for everyone, but especially for people with intellectual conditions.
+Further, ConvoKit makes apps easier to use for everyone, but especially for people with intellectual disabilities.
 
 ### Idea:
 
 Use Whisper to transcribe spoken natural language requests and tiny LLMs to understand the context behind the request to decide which swift function to call.
 
-The development experience is as simple as adding a macro to the classes you'd like to expose to the LLM and initializing the framework within your SwiftUI View.
+The development experience is as simple as adding a macro to the classes with at least one public function that you'd like to expose to the LLM and initializing the framework within your SwiftUI View.
 
 ### Setup:
 
@@ -40,7 +42,8 @@ class ContentViewModel {
 
 ```swift
 // Initializes a view model that can interpret natural language through voice and speak back if you have a backend endpoint
-@StateObject var streamer = ConvoStreamer(baseThinkURL: "", baseSpeakURL: "", localWhisperURL:  Bundle.main.url(forResource: "ggml-tiny.en", withExtension: "bin")!)
+@StateObject var streamer = ConvoStreamer(baseThinkURL: "", baseSpeakURL: "", 
+                                          localWhisperURL:  Bundle.main.url(forResource: "ggml-tiny.en", withExtension: "bin")!)
 
 func request(text: String) async {
     // A string that holds all options (the functions you marked as public)
