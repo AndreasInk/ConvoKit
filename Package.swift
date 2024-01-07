@@ -41,7 +41,6 @@ let package = Package(
             .byName(name: "ConvoKitMacros"),
             .product(name: "llama", package: "llama.cpp"),
             .product(name: "whisper", package: "whisper.cpp"),
-            .product(name: "SplineRuntime", package: "spline-ios"),
             .byName(name: "AudioStreaming"),
             .byName(name: "AudioKit"),
         ]),
