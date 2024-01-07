@@ -58,7 +58,7 @@ open class ConvoLLMManager {
         guard let llamaContext else {
             return ""
         }
-        let length: Int = (prompt.count + text.count + options.count) / 5
+        let length: Int = (prompt.count + text.count + options.count) / 2
         print("length: \(length)")
         let t_start = DispatchTime.now().uptimeNanoseconds
         await llamaContext.completion_init(text: prompt)
@@ -70,9 +70,9 @@ open class ConvoLLMManager {
             let result = await llamaContext.completion_loop()
             print(result)
             let newResult = results + result
-            var delimiterString = isCompletingFunction ? "Correct Option" : "Correct Argument Values"
+            var delimiterString = "Correct"
             
-            if newResult.contains(delimiterString), isCompletingFunction {
+            if newResult.contains(delimiterString) {
                 //if options.split(separator: ", ").map({String($0)}).contains(root) {
                 print("results: \(results)")
                 await llamaContext.clear()
@@ -104,7 +104,7 @@ open class ConvoLLMManager {
 
         // Prompt to identify the most appropriate function
         let choosePrompt = """
-        Determine the most suitable function call for the request:
+        Determine the most suitable function call:
         Request Description: \(cleanText)
         Available Options: \(options)
 
@@ -114,7 +114,7 @@ open class ConvoLLMManager {
         // Attempt to identify the function name
         guard let functionName = await complete(prompt: choosePrompt, 
                                                 text: cleanText, options: options, 
-                                                isCompletingFunction: true) else {
+                                                isCompletingFunction: true)?.split(separator: ")").first else {
             return nil // Handle cases where the function name couldn't be determined
         }
 
@@ -122,12 +122,19 @@ open class ConvoLLMManager {
         var args: [String] = []
         if !functionName.contains("()") {
             let argumentsPrompt = """
-                    Identify and return only the argument values for the given function signature based on the provided context description, each argument is separated by \",\":
-                    Function Signature: \(functionName)
-                    Context Description: \(cleanText)
+            Determine the most suitable argument to pass to the function:
+            Function Signature: ContentViewModel.shared.printNumber(number Int)
+            Natural Language Input: Print the number 21
 
-                    Correct Argument Values:
-                    """
+            Correct Argument Values:
+            21
+            
+            Determine the most suitable argument to pass to the function:
+            Function Signature: \(functionName)
+            Natural Language Input: \(cleanText)
+
+            Correct Argument Values:
+            """
 
 
 
@@ -135,7 +142,7 @@ open class ConvoLLMManager {
             if let argumentsString = await complete(prompt: argumentsPrompt,
                                                     text: cleanText,
                                                     options: options,
-                                                    isCompletingFunction: false) {
+                                                    isCompletingFunction: false)?.split(separator: "\n\n").first {
                 for arg in argumentsString.split(separator: ",").map({String($0)}) {
                     if let lastElement = arg.split(separator: ": ").last, let arg = lastElement.split(separator: "Correct Argument").first {
                         args.append(String(arg))
@@ -147,7 +154,7 @@ open class ConvoLLMManager {
 
         print("Function Name: \(functionName)")
         print("Arguments: \(args)")
-        return LLMResponse(functionName: functionName, args: args)
+        return LLMResponse(functionName: String(functionName), args: args)
     }
 
 

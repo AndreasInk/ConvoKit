@@ -47,7 +47,7 @@ public struct ConvoConnector: DeclarationMacro {
                 guard args.indices.contains(\(argIndex)) else {
                     return
                 }
-                let \(arg.name) = args[\(argIndex)]
+                    let \(arg.name) = args[\(argIndex)]
                 """)
                     
                 } else {
@@ -90,7 +90,7 @@ struct GetConvoState: ExpressionMacro {
         for function in convoState {
             var functionString = function.functionName + "("
             for arg in function.args {
-                functionString += arg.name + ": " + arg.name
+                functionString += arg.name + ": " + arg.type
             }
             functionString += "), "
             

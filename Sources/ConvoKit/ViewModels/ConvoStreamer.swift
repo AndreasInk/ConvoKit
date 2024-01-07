@@ -67,6 +67,7 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
             await self.recorder.stopRecording()
             Task { @MainActor in
                 self.state.isRecording = false
+                self.state.nonSpeechCount = 0
             }
             let floats = try AudioUtils.convertAudioFileToPCMArray(fileURL: tmpURL)
             

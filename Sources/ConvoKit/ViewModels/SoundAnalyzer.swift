@@ -28,7 +28,8 @@ extension ConvoStreamer: SNResultsObserving {
                 self.state.wasListening = false
             }
         } else {
-            if self.state.nonSpeechCount == 25, self.state.wasListening == false {
+            // For prod it'll be 25
+            if self.state.nonSpeechCount == 15, self.state.wasListening == false {
                 Task {
                     let _ = try await toggleRecord(isAsking: true,
                                            chatInput: .emptyChat)
