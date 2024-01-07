@@ -21,7 +21,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
         .package(url: "https://github.com/ggerganov/llama.cpp.git", branch: "master"),
         .package(url: "https://github.com/ggerganov/whisper.cpp.git", branch: "master"),
-        .package(url: "https://github.com/splinetool/spline-ios.git", branch: "main"),
         .package(url: "https://github.com/AndreasInk/AudioStreaming.git", branch: "main"),
         .package(url: "https://github.com/AudioKit/AudioKit.git", branch: "main"),
     ],

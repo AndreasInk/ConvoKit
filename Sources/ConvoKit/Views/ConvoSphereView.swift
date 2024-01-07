@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SplineRuntime
 
 public struct ConvoSphereView: View {
     
@@ -26,9 +25,8 @@ public struct ConvoSphereView: View {
     public var body: some View {
         ZStack(alignment: shouldCenter ? .center : .bottomTrailing) {
             // fetching from cloud
-            let url = URL(string: "https://build.spline.design/vn5SJk7Y1EhhLBV3gKn5/scene.splineswift")!
-            
-            try? SplineView(sceneFileURL: url)
+          Circle()
+                .foregroundStyle(.purple)
                 .frame(width: 75, height: 75)
                 .clipShape(Circle())
                 .rotationEffect(thinking ? .degrees(225) : .degrees(0))
