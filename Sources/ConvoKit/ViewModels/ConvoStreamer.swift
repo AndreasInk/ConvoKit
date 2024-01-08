@@ -77,13 +77,12 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
             print(text)
             try? FileManager.default.removeItem(at: tmpURL)
             
-            if isAsking {
-                if text.count > 10, !baseThinkURL.isEmpty, !baseSpeakURL.isEmpty {
+            if isAsking, !baseSpeakURL.isEmpty, !baseThinkURL.isEmpty {
+                if text.count > 10 {
                     do {
                         let chatResponse = try await llmManager.submitNewChat(text, chatInput: chatInput)
                         self.state.chat = chatResponse
                         if let lastChat = chatResponse.last {
-                            await self.recorder.stopAudioEngine()
                             result.chatMessage = [lastChat]
                             self.startStreaming(lastChat.content)
                             
@@ -95,6 +94,7 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
                     return try await toggleRecord(isAsking: isAsking, chatInput: chatInput)
                 }
             }
+            await self.recorder.stopAudioEngine()
             result.transcription = [AudioTranscription(text: text, timestamp: 0, audioData: Data())]
             self.state.result = result
             return result
