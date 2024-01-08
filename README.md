@@ -1,6 +1,6 @@
 # ConvoKit
 
-![ConvoKit Header.png](https://res.craft.do/user/full/23a03a79-af5e-1af9-b4ff-27170389b6b1/doc/E4042505-40C7-4BEF-BDD8-996CDFCB3A26/8A8EDFDA-6C3A-4D98-8712-BEFA90ADB6B8_2/NL7UXpDw9nQIS5P2gMqmxN7GbKMZid3xbIdpmwVbxKEz/ConvoKit%20Header.png)
+![ConvoKit Header.png](https://res.craft.do/user/full/23a03a79-af5e-1af9-b4ff-27170389b6b1/doc/E4042505-40C7-4BEF-BDD8-996CDFCB3A26/9F30F50D-72CB-4681-9921-5F119ECA1487_2/jsZakDIfy07L60tAEq8OobyWx7Hj8BzpzFukuxDzch0z/ConvoKit%20Header.png)
 
 ### Goal:
 

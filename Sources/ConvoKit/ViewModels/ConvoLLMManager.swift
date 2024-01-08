@@ -73,7 +73,6 @@ open class ConvoLLMManager {
             var delimiterString = "Correct"
             
             if newResult.contains(delimiterString) {
-                //if options.split(separator: ", ").map({String($0)}).contains(root) {
                 print("results: \(results)")
                 await llamaContext.clear()
                 return String(results.split(separator: delimiterString).first ?? "").replacingOccurrences(of: ":", with: "").replacingOccurrences(of: delimiterString, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -163,7 +162,7 @@ open class ConvoLLMManager {
         var chatInput = chatInput
         chatInput.messages.append(ChatMessage(role: .user, content: text))
         
-        var urlRequest = URLRequest(url: URL(string: baseThinkURL + "/generateChat")!)
+        var urlRequest = URLRequest(url: URL(string: baseThinkURL + "/chat")!)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         

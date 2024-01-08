@@ -103,6 +103,7 @@ struct GetConvoState: ExpressionMacro {
 struct SkillIssueError: Error {
     
 }
+
 @main
 struct ConvoKitPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [

@@ -62,12 +62,8 @@ public enum ChatRole: String, Codable {
 
 public struct ChatInput: Codable, Identifiable {
     public var id = UUID().uuidString
-    var course: String
-    var learningStyle: String
-    var communicationStyle: String
-    var character: String
-    var depth: String
+    var directResponse: String
     var messages: [ChatMessage]
     
-    static var emptyChat = ChatInput(course: "", learningStyle: "", communicationStyle: "", character: "", depth: "", messages: [])
+    static var emptyChat = ChatInput(directResponse: "", messages: [])
 }

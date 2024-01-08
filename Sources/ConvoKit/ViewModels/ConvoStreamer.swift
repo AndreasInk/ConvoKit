@@ -78,16 +78,16 @@ public class ConvoStreamer: NSObject, ObservableObject, URLSessionDataDelegate, 
             try? FileManager.default.removeItem(at: tmpURL)
             
             if isAsking {
-                if text.count > 10 {
+                if text.count > 10, !baseThinkURL.isEmpty, !baseSpeakURL.isEmpty {
                     do {
-                       // let chatResponse = try await llmManager.submitNewChat(text, chatInput: chatInput)
-                       // self.state.chat = chatResponse
-                       // if let lastChat = chatResponse.last {
+                        let chatResponse = try await llmManager.submitNewChat(text, chatInput: chatInput)
+                        self.state.chat = chatResponse
+                        if let lastChat = chatResponse.last {
                             await self.recorder.stopAudioEngine()
-                           // result.chatMessage = [lastChat]
-                           // self.startStreaming(lastChat.content)
+                            result.chatMessage = [lastChat]
+                            self.startStreaming(lastChat.content)
                             
-                       // }
+                        }
                     } catch {
                         print(error)
                     }
