@@ -8,11 +8,7 @@ Make SwiftUI apps more accessible + powerful with conversation
 
 ### Why:
 
-My Dad has Parkinson's disease which can make it difficult to use touch screens at times, especially when his tremors are worse.
-
-I've attempted to develop computer vision based control apps with eye tracking but we find these somewhat inaccurate, this is where ConvoKit can hopefully help.
-
-Further, ConvoKit makes apps easier to use for everyone, but especially for people with intellectual disabilities.
+ConvoKit makes apps easier to use for everyone, but especially for people with disabilities.
 
 ### Idea:
 
